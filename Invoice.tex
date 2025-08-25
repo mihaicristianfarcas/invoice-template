@@ -1,0 +1,170 @@
+\documentclass[11pt,a4paper]{article}
+
+% Required packages
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[sfdefault]{ClearSans}
+\usepackage{geometry}
+\usepackage{array}
+\usepackage{booktabs}
+\usepackage{colortbl}
+\usepackage{eurosym}
+\usepackage{xcolor}
+
+% Page layout
+\geometry{
+    top=1.5cm,
+    bottom=1.5cm,
+    left=2.2cm,
+    right=2.2cm,
+    headheight=0pt,
+    headsep=0pt,
+    footskip=0.8cm
+}
+
+% Font and page settings
+\renewcommand{\familydefault}{\sfdefault}
+\pagestyle{empty}
+
+% Color scheme - customize these to match your brand
+\definecolor{primaryblue}{RGB}{44, 82, 130}
+\definecolor{lightgray}{RGB}{128, 128, 128}
+\definecolor{darkgray}{RGB}{64, 64, 64}
+\definecolor{lightblue}{RGB}{248, 251, 255}
+
+% Client information - update for each invoice
+\newcommand{\clientname}{Acme Corporation\\Ltd.}
+\newcommand{\clientaddress}{123 Business Street\\12345 Commercial City}
+
+% Your company information - customize these
+\newcommand{\companyname}{Professional Services Inc.}
+\newcommand{\companystreet}{456 Service Avenue}
+\newcommand{\companycity}{Business Town, 54321}
+\newcommand{\companyphone}{+1 (555) 123-4567}
+\newcommand{\companyemail}{billing@professionalservices.com}
+
+% Invoice details - update for each invoice
+\newcommand{\invoicenumber}{INV-2024-0001}
+\newcommand{\invoicedate}{January 15, 2024}
+\newcommand{\invoicedeadline}{February 15, 2024}
+\newcommand{\companyiban}{US12 3456 7890 1234 5678 90}
+\newcommand{\companybic}{CHASUS33}
+
+% Formatting commands
+\newcommand{\layoutlabel}[1]{\textbf{\textcolor{lightgray}{\footnotesize\MakeUppercase{#1}}}}
+\newcommand{\contactinfo}[1]{\textcolor{darkgray}{\small #1}}
+
+\begin{document}
+
+% Header with company and client information
+\noindent
+\begin{minipage}[t]{0.47\textwidth}
+    \layoutlabel{Bill from}\\[0.3cm]
+    {\large\textbf{\companyname}}\\[0.2cm]
+    \contactinfo{\companystreet}\\
+    \contactinfo{\companycity}\\[0.3cm]
+    \contactinfo{\companyphone}\\
+    \contactinfo{\texttt{\companyemail}}
+\end{minipage}%
+\hfill%
+\begin{minipage}[t]{0.47\textwidth}
+    \begin{flushright}
+        \layoutlabel{Bill to}\\[0.3cm]
+        {\large\textbf{\clientname}}\\[0.2cm]
+        \contactinfo{\clientaddress}
+    \end{flushright}
+\end{minipage}
+
+\vspace{0.8cm}
+
+% Invoice title
+\begin{center}
+    {\Huge\textbf{\textcolor{primaryblue}{INVOICE}}}
+\end{center}
+
+\vspace{0.5cm}
+
+% Invoice metadata table
+\begin{center}
+    \begin{tabular*}{\textwidth}{@{\extracolsep{\fill}}ccc@{}}
+        \layoutlabel{Invoice Number} & \layoutlabel{Invoice Date} & \layoutlabel{Payment Due} \\
+        \textbf{\invoicenumber} & \textbf{\invoicedate} & \textbf{\invoicedeadline} \\
+    \end{tabular*}
+\end{center}
+
+\vspace{0.5cm}
+
+% Services section header
+\noindent
+{\Large\textbf{\textcolor{primaryblue}{Services Provided}}}
+\par\vspace{-0.2cm}
+\noindent
+\textcolor{primaryblue}{\rule{\textwidth}{0.8pt}}
+\vspace{0.3cm}
+% Services table - modify the rows below for your services
+\begin{tabular}{p{8.6cm} c c r}
+    \textbf{\textcolor{primaryblue}{Service Description}} & 
+    \textbf{\textcolor{primaryblue}{Qty/Hours}} & 
+    \textbf{\textcolor{primaryblue}{Rate (\euro)}} & 
+    \textbf{\textcolor{primaryblue}{Total (\euro)}} \\
+    \midrule
+    Technical consultation and code review & 8 hrs & 75.00 & 600.00 \\
+    \rowcolor{lightblue}
+    Database optimization and performance tuning & 12 hrs & 85.00 & 1,020.00 \\
+    Custom PostgreSQL extension development & 1 pcs & 500.00 & 500.00 \\
+    \rowcolor{lightblue}
+    System architecture documentation & 4 hrs & 65.00 & 260.00 \\
+    Training session for development team & 6 hrs & 90.00 & 540.00 \\
+    \rowcolor{lightblue}
+    Project management and coordination & 5 days & 120.00 & 600.00 \\
+    Code refactoring and optimization & 10 hrs & 70.00 & 700.00 \\
+    
+    \bottomrule
+\end{tabular}
+
+\vspace{0.3cm}
+
+% Total amount - update the currency and amount as needed
+\begin{flushright}
+    \begin{tabular}{lr}
+        \large\textbf{\textcolor{primaryblue}{TOTAL AMOUNT DUE:}} & 
+        {\Large\textbf{\textcolor{primaryblue}{13,340.00\ \$}}} \\
+    \end{tabular}
+\end{flushright}
+
+\vspace{0.3cm}
+
+% Payment information section
+\noindent
+{\Large\textbf{\textcolor{primaryblue}{Payment Information}}}
+\par\vspace{-0.2cm}
+\noindent
+\textcolor{primaryblue}{\rule{\textwidth}{0.8pt}}
+\vspace{0.3cm}
+\begin{tabular}{@{}p{3cm}l@{}}
+    \layoutlabel{IBAN} & \texttt{\textbf{\companyiban}} \\[0.2cm]
+    \layoutlabel{BIC/SWIFT} & \texttt{\textbf{\companybic}} \\[0.2cm]
+\end{tabular}
+
+\vspace{0.5cm}
+
+% Notes section - customize the message below
+\noindent
+{\Large\textbf{\textcolor{primaryblue}{Notes}}}
+\par\vspace{-0.2cm}
+\noindent
+\textcolor{primaryblue}{\rule{\textwidth}{0.8pt}}
+\vspace{0.3cm}
+\textcolor{darkgray}{%
+\small Thank you for your business! Please include the invoice number \textbf{\invoicenumber} in your payment reference. For any questions regarding this invoice, please contact us at \texttt{\companyemail}.
+}
+
+\vspace{0.8cm}
+% Footer with company contact information
+\begin{center}
+    {\small\textcolor{lightgray}{%
+        \textbf{\companyname} $\bullet$ \companystreet $\bullet$ \companycity $\bullet$ \companyphone $\bullet$ \texttt{\companyemail}
+    }}
+\end{center}
+
+\end{document}
