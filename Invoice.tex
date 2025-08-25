@@ -1,17 +1,22 @@
 \documentclass[11pt,a4paper]{article}
 
-% Required packages
+% ================================================================================
+% REQUIRED PACKAGES
+% ================================================================================
 \usepackage[utf8]{inputenc}
 \usepackage[T1]{fontenc}
 \usepackage[sfdefault]{ClearSans}
 \usepackage{geometry}
 \usepackage{array}
 \usepackage{booktabs}
-\usepackage{colortbl}
+\usepackage[table]{xcolor} % <- enables \rowcolors
 \usepackage{eurosym}
-\usepackage{xcolor}
+\usepackage{xfp}
+\usepackage{etoolbox}
 
-% Page layout
+% ================================================================================
+% PAGE LAYOUT
+% ================================================================================
 \geometry{
     top=1.5cm,
     bottom=1.5cm,
@@ -22,45 +27,148 @@
     footskip=0.8cm
 }
 
-% Font and page settings
 \renewcommand{\familydefault}{\sfdefault}
 \pagestyle{empty}
 
-% Color scheme - customize these to match your brand
+% ================================================================================
+% COLOR SCHEME - CUSTOMIZE THESE TO MATCH YOUR BRAND
+% ================================================================================
 \definecolor{primaryblue}{RGB}{44, 82, 130}
 \definecolor{lightgray}{RGB}{128, 128, 128}
 \definecolor{darkgray}{RGB}{64, 64, 64}
 \definecolor{lightblue}{RGB}{248, 251, 255}
 
-% Client information - update for each invoice
+% ================================================================================
+% CONFIGURATION SECTION - EDIT THESE VALUES FOR EACH INVOICE
+% ================================================================================
+
+% Client Information
 \newcommand{\clientname}{Acme Corporation\\Ltd.}
 \newcommand{\clientaddress}{123 Business Street\\12345 Commercial City}
 
-% Your company information - customize these
+% Your Company Information
 \newcommand{\companyname}{Professional Services Inc.}
+\newcommand{\companycif}{CIF: 12345678}
 \newcommand{\companystreet}{456 Service Avenue}
 \newcommand{\companycity}{Business Town, 54321}
 \newcommand{\companyphone}{+1 (555) 123-4567}
 \newcommand{\companyemail}{billing@professionalservices.com}
 
-% Invoice details - update for each invoice
+% Invoice Details
 \newcommand{\invoicenumber}{INV-2024-0001}
 \newcommand{\invoicedate}{January 15, 2024}
 \newcommand{\invoicedeadline}{February 15, 2024}
 \newcommand{\companyiban}{US12 3456 7890 1234 5678 90}
 \newcommand{\companybic}{CHASUS33}
 
-% Formatting commands
+% Currency Settings
+\newcommand{\currencysymbol}{\$}
+
+% ================================================================================
+% AUTOMATIC CALCULATION SYSTEM
+% ================================================================================
+\def\totalamount{0}
+
+% Command to add two decimal numbers
+\newcommand{\addtototal}[1]{%
+    \xdef\totalamount{\fpeval{\totalamount + #1}}%
+}
+
+% Command to format currency
+\newcommand{\formatcurrency}[1]{%
+    \fpeval{round(#1, 2)}\,\currencysymbol%
+}
+
+% ================================================================================
+% REUSABLE FORMATTING COMMANDS
+% ================================================================================
+
+% Spacing commands
+\newcommand{\sectionskip}{\vspace{0.8cm}}
+\newcommand{\itemskip}{\vspace{0.5cm}}
+\newcommand{\blockskip}{\vspace{0.3cm}}
+\newlength{\smallgap}
+\setlength{\smallgap}{0.2cm}
+
+% Text formatting
 \newcommand{\layoutlabel}[1]{\textbf{\textcolor{lightgray}{\footnotesize\MakeUppercase{#1}}}}
 \newcommand{\contactinfo}[1]{\textcolor{darkgray}{\small #1}}
+\newcommand{\primarytext}[1]{\textcolor{primaryblue}{#1}}
+\newcommand{\emphasizedtext}[1]{\textbf{\primarytext{#1}}}
+
+% Section header
+\newcommand{\sectionheader}[1]{%
+    \noindent%
+    {\Large\emphasizedtext{#1}}%
+    \par\vspace{-0.2cm}%
+    \noindent%
+    \primarytext{\rule{\textwidth}{0.8pt}}%
+    \blockskip%
+}
+
+% Contact block
+\newcommand{\contactblock}[2]{%
+    \layoutlabel{#1}\\[0.3cm]%
+    {\large\textbf{#2}}%
+}
+
+% Invoice metadata (stacked)
+\newcommand{\invoicemeta}[2]{%
+    \layoutlabel{#1} \\[0.1cm] \textbf{#2}%
+}
+
+% Invoice metadata (inline, no line breaks)
+\newcommand{\invoicemetainline}[2]{%
+    \layoutlabel{#1}: \textbf{#2}%
+}
+
+% ================================================================================
+% SERVICE MANAGEMENT SYSTEM
+% ================================================================================
+
+% Initialize services table (striped rows)
+\newcommand{\startservicestable}{%
+    \rowcolors{2}{lightblue}{}%
+    \begin{tabular}{p{8.6cm} c c r}
+        \emphasizedtext{Service Description} & 
+        \emphasizedtext{Qty/Hours} & 
+        \emphasizedtext{Rate (\currencysymbol)} & 
+        \emphasizedtext{Total (\currencysymbol)} \\
+        \midrule
+}
+
+% End services table
+\newcommand{\finishservicestable}{%
+    \end{tabular}%
+    \rowcolors{0}{}{}%
+}
+
+% Add service
+\newcommand{\newservice}[3]{%
+    #1 & #2 & \formatcurrency{#3} & \formatcurrency{\fpeval{#2 * #3}}\\
+    \addtototal{\fpeval{#2 * #3}}%
+}
+
+% Display total
+\newcommand{\displaytotal}{%
+    \begin{flushright}
+        \begin{tabular}{lr}
+            \large\emphasizedtext{TOTAL AMOUNT DUE:} & 
+            {\Large\emphasizedtext{\formatcurrency{\totalamount}}} \\
+        \end{tabular}
+    \end{flushright}
+}
+
+% ================================================================================
+% DOCUMENT CONTENT
+% ================================================================================
 
 \begin{document}
 
-% Header with company and client information
+% Header
 \noindent
 \begin{minipage}[t]{0.47\textwidth}
-    \layoutlabel{Bill from}\\[0.3cm]
-    {\large\textbf{\companyname}}\\[0.2cm]
+    \contactblock{from}{\companyname}\\[\smallgap]
     \contactinfo{\companystreet}\\
     \contactinfo{\companycity}\\[0.3cm]
     \contactinfo{\companyphone}\\
@@ -69,22 +177,22 @@
 \hfill%
 \begin{minipage}[t]{0.47\textwidth}
     \begin{flushright}
-        \layoutlabel{Bill to}\\[0.3cm]
-        {\large\textbf{\clientname}}\\[0.2cm]
+        \contactblock{to}{\clientname}\\[\smallgap]
         \contactinfo{\clientaddress}
     \end{flushright}
 \end{minipage}
 
-\vspace{0.8cm}
+\sectionskip
 
 % Invoice title
 \begin{center}
-    {\Huge\textbf{\textcolor{primaryblue}{INVOICE}}}
+    {\Huge\emphasizedtext{INVOICE}}
 \end{center}
 
-\vspace{0.5cm}
+\blockskip
 
-% Invoice metadata table
+% Invoice metadata (inline, one row, spaced L-C-R)
+\noindent
 \begin{center}
     \begin{tabular*}{\textwidth}{@{\extracolsep{\fill}}ccc@{}}
         \layoutlabel{Invoice Number} & \layoutlabel{Invoice Date} & \layoutlabel{Payment Due} \\
@@ -92,78 +200,50 @@
     \end{tabular*}
 \end{center}
 
-\vspace{0.5cm}
+\sectionskip
 
-% Services section header
-\noindent
-{\Large\textbf{\textcolor{primaryblue}{Services Provided}}}
-\par\vspace{-0.2cm}
-\noindent
-\textcolor{primaryblue}{\rule{\textwidth}{0.8pt}}
-\vspace{0.3cm}
-% Services table - modify the rows below for your services
-\begin{tabular}{p{8.6cm} c c r}
-    \textbf{\textcolor{primaryblue}{Service Description}} & 
-    \textbf{\textcolor{primaryblue}{Qty/Hours}} & 
-    \textbf{\textcolor{primaryblue}{Rate (\euro)}} & 
-    \textbf{\textcolor{primaryblue}{Total (\euro)}} \\
-    \midrule
-    Technical consultation and code review & 8 hrs & 75.00 & 600.00 \\
-    \rowcolor{lightblue}
-    Database optimization and performance tuning & 12 hrs & 85.00 & 1,020.00 \\
-    Custom PostgreSQL extension development & 1 pcs & 500.00 & 500.00 \\
-    \rowcolor{lightblue}
-    System architecture documentation & 4 hrs & 65.00 & 260.00 \\
-    Training session for development team & 6 hrs & 90.00 & 540.00 \\
-    \rowcolor{lightblue}
-    Project management and coordination & 5 days & 120.00 & 600.00 \\
-    Code refactoring and optimization & 10 hrs & 70.00 & 700.00 \\
-    
-    \bottomrule
-\end{tabular}
+% Services section
+\sectionheader{Services Provided}
 
-\vspace{0.3cm}
+\startservicestable
+    \newservice{Technical consultation and code review}{8}{75.00}
+    \newservice{Database optimization and performance tuning}{12}{85.00}
+    \newservice{Custom PostgreSQL extension development}{1}{500.00}
+    \newservice{System architecture documentation}{10}{65.00}
+    \newservice{Training session for development team}{6}{90.00}
+    \newservice{Project management and coordination}{5}{120.00}
+    \newservice{Code refactoring and optimization}{10}{70.00}
+\finishservicestable
 
-% Total amount - update the currency and amount as needed
-\begin{flushright}
-    \begin{tabular}{lr}
-        \large\textbf{\textcolor{primaryblue}{TOTAL AMOUNT DUE:}} & 
-        {\Large\textbf{\textcolor{primaryblue}{13,340.00\ \$}}} \\
-    \end{tabular}
-\end{flushright}
+\blockskip
 
-\vspace{0.3cm}
+% Total amount
+\displaytotal
 
-% Payment information section
-\noindent
-{\Large\textbf{\textcolor{primaryblue}{Payment Information}}}
-\par\vspace{-0.2cm}
-\noindent
-\textcolor{primaryblue}{\rule{\textwidth}{0.8pt}}
-\vspace{0.3cm}
+\blockskip
+
+% Payment information
+\sectionheader{Payment Information}
+
 \begin{tabular}{@{}p{3cm}l@{}}
-    \layoutlabel{IBAN} & \texttt{\textbf{\companyiban}} \\[0.2cm]
-    \layoutlabel{BIC/SWIFT} & \texttt{\textbf{\companybic}} \\[0.2cm]
+    \layoutlabel{IBAN} & \texttt{\textbf{\companyiban}} \\[\smallgap]
+    \layoutlabel{BIC/SWIFT} & \texttt{\textbf{\companybic}} \\[\smallgap]
 \end{tabular}
 
-\vspace{0.5cm}
+\itemskip
 
-% Notes section - customize the message below
-\noindent
-{\Large\textbf{\textcolor{primaryblue}{Notes}}}
-\par\vspace{-0.2cm}
-\noindent
-\textcolor{primaryblue}{\rule{\textwidth}{0.8pt}}
-\vspace{0.3cm}
+% Notes
+\sectionheader{Notes}
+
 \textcolor{darkgray}{%
-\small Thank you for your business! Please include the invoice number \textbf{\invoicenumber} in your payment reference. For any questions regarding this invoice, please contact us at \texttt{\companyemail}.
-}
+\small Thank you! Please include the invoice number \textbf{\invoicenumber} in your payment reference.}
 
-\vspace{0.8cm}
-% Footer with company contact information
+\sectionskip
+
+% Footer
 \begin{center}
     {\small\textcolor{lightgray}{%
-        \textbf{\companyname} $\bullet$ \companystreet $\bullet$ \companycity $\bullet$ \companyphone $\bullet$ \texttt{\companyemail}
+        \textbf{\companyname} \\ \textbf{\companycif} \\ \companystreet \\ \companycity \\ \companyphone \\ \texttt{\companyemail}
     }}
 \end{center}
 
