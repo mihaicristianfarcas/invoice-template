@@ -1,15 +1,24 @@
-\documentclass[11pt,a4paper]{article}
+\documentclass[10pt,a4paper]{article}
 
 % ================================================================================
 % REQUIRED PACKAGES
 % ================================================================================
-\usepackage[utf8]{inputenc}
-\usepackage[T1]{fontenc}
-\usepackage[sfdefault]{ClearSans}
+\usepackage{iftex}
+\ifPDFTeX
+    \usepackage[utf8]{inputenc}
+    \usepackage[T1]{fontenc}
+    \usepackage[scaled=0.86]{beramono} % mono face for labels, numbers, technical values
+\else
+    % XeLaTeX / LuaLaTeX / Tectonic
+    \usepackage{fontspec}
+    \setmonofont{DejaVuSansMono}[Extension=.ttf, Scale=0.78,
+        BoldFont=DejaVuSansMono-Bold]
+\fi
+\usepackage[sfdefault]{inter}          % text face: Inter
 \usepackage{geometry}
 \usepackage{array}
 \usepackage{booktabs}
-\usepackage[table]{xcolor} % <- enables \rowcolors
+\usepackage[table]{xcolor}
 \usepackage{eurosym}
 \usepackage{xfp}
 \usepackage{etoolbox}
@@ -18,8 +27,8 @@
 % PAGE LAYOUT
 % ================================================================================
 \geometry{
-    top=1.5cm,
-    bottom=1.5cm,
+    top=2.2cm,
+    bottom=2cm,
     left=2.2cm,
     right=2.2cm,
     headheight=0pt,
@@ -27,16 +36,16 @@
     footskip=0.8cm
 }
 
-\renewcommand{\familydefault}{\sfdefault}
 \pagestyle{empty}
+\setlength{\parindent}{0pt}
 
 % ================================================================================
 % COLOR SCHEME - CUSTOMIZE THESE TO MATCH YOUR BRAND
 % ================================================================================
-\definecolor{primaryblue}{RGB}{44, 82, 130}
-\definecolor{lightgray}{RGB}{128, 128, 128}
-\definecolor{darkgray}{RGB}{64, 64, 64}
-\definecolor{lightblue}{RGB}{248, 251, 255}
+\definecolor{ink}{HTML}{1D1C1A}      % body text
+\definecolor{muted}{HTML}{6B6863}    % secondary text and labels
+\definecolor{hairline}{HTML}{E4E1DA} % rules
+\definecolor{accent}{HTML}{0E7263}   % used sparingly: the total
 
 % ================================================================================
 % CONFIGURATION SECTION - EDIT THESE VALUES FOR EACH INVOICE
@@ -74,9 +83,19 @@
     \xdef\totalamount{\fpeval{\totalamount + #1}}%
 }
 
-% Command to format currency
+% Format a bare amount, padded to two decimals (75 -> 75.00)
+\newcommand{\formatamount}[1]{%
+    \begingroup
+    \edef\fmtrounded{\fpeval{round(#1,2)}}%
+    \edef\fmtinteger{\fpeval{trunc(\fmtrounded,0)}}%
+    \edef\fmtcents{\fpeval{round(abs(\fmtrounded - \fmtinteger) * 100, 0)}}%
+    \fmtinteger.\ifnum\fmtcents<10 0\fi\fmtcents
+    \endgroup
+}
+
+% Format an amount with the currency symbol
 \newcommand{\formatcurrency}[1]{%
-    \fpeval{round(#1, 2)}\,\currencysymbol%
+    \formatamount{#1}\,\currencysymbol%
 }
 
 % ================================================================================
@@ -84,79 +103,63 @@
 % ================================================================================
 
 % Spacing commands
-\newcommand{\sectionskip}{\vspace{0.8cm}}
-\newcommand{\itemskip}{\vspace{0.5cm}}
+\newcommand{\sectionskip}{\vspace{1.1cm}}
+\newcommand{\itemskip}{\vspace{0.9cm}}
 \newcommand{\blockskip}{\vspace{0.3cm}}
 \newlength{\smallgap}
 \setlength{\smallgap}{0.2cm}
 
 % Text formatting
-\newcommand{\layoutlabel}[1]{\textbf{\textcolor{lightgray}{\footnotesize\MakeUppercase{#1}}}}
-\newcommand{\contactinfo}[1]{\textcolor{darkgray}{\small #1}}
-\newcommand{\primarytext}[1]{\textcolor{primaryblue}{#1}}
-\newcommand{\emphasizedtext}[1]{\textbf{\primarytext{#1}}}
+\newcommand{\layoutlabel}[1]{\textcolor{muted}{\ttfamily\footnotesize\MakeUppercase{#1}}}
+\newcommand{\contactinfo}[1]{\textcolor{muted}{\small #1}}
+\newcommand{\monovalue}[1]{{\ttfamily #1}}
 
-% Section header
+% Hairline rule, full width
+\newcommand{\hairlinerule}{\par\noindent\textcolor{hairline}{\rule{\textwidth}{0.6pt}}\par}
+
+% Section header: a quiet uppercase mono label
 \newcommand{\sectionheader}[1]{%
-    \noindent%
-    {\Large\emphasizedtext{#1}}%
-    \par\vspace{-0.2cm}%
-    \noindent%
-    \primarytext{\rule{\textwidth}{0.8pt}}%
-    \blockskip%
-}
-
-% Contact block
-\newcommand{\contactblock}[2]{%
-    \layoutlabel{#1}\\[0.3cm]%
-    {\large\textbf{#2}}%
-}
-
-% Invoice metadata (stacked)
-\newcommand{\invoicemeta}[2]{%
-    \layoutlabel{#1} \\[0.1cm] \textbf{#2}%
-}
-
-% Invoice metadata (inline, no line breaks)
-\newcommand{\invoicemetainline}[2]{%
-    \layoutlabel{#1}: \textbf{#2}%
+    \noindent\layoutlabel{#1}%
+    \par\vspace{0.3cm}\noindent%
 }
 
 % ================================================================================
 % SERVICE MANAGEMENT SYSTEM
 % ================================================================================
 
-% Initialize services table (striped rows)
+% Initialize services table (hairline rules, no stripes)
 \newcommand{\startservicestable}{%
-    \rowcolors{2}{lightblue}{}%
-    \begin{tabular}{p{8.6cm} c c r}
-        \emphasizedtext{Service Description} & 
-        \emphasizedtext{Qty/Hours} & 
-        \emphasizedtext{Rate (\currencysymbol)} & 
-        \emphasizedtext{Total (\currencysymbol)} \\
+    \renewcommand{\arraystretch}{1.5}%
+    \arrayrulecolor{hairline}%
+    \setlength{\heavyrulewidth}{0.6pt}%
+    \setlength{\lightrulewidth}{0.6pt}%
+    \begin{tabular*}{\textwidth}{@{\extracolsep{\fill}}p{8.2cm}rrr@{}}
+        \toprule
+        \layoutlabel{Description} &
+        \layoutlabel{Qty} &
+        \layoutlabel{Rate (\currencysymbol)} &
+        \layoutlabel{Total (\currencysymbol)} \\
         \midrule
 }
 
 % End services table
 \newcommand{\finishservicestable}{%
-    \end{tabular}%
-    \rowcolors{0}{}{}%
+        \bottomrule
+    \end{tabular*}%
 }
 
 % Add service
 \newcommand{\newservice}[3]{%
-    #1 & #2 & \formatcurrency{#3} & \formatcurrency{\fpeval{#2 * #3}}\\
-    \addtototal{\fpeval{#2 * #3}}%
+    #1 & \monovalue{#2} & \monovalue{\formatamount{#3}} &
+    \monovalue{\formatamount{\fpeval{#2 * #3}}}\addtototal{\fpeval{#2 * #3}}\\
 }
 
 % Display total
 \newcommand{\displaytotal}{%
     \begin{flushright}
-        \begin{tabular}{lr}
-            \large\emphasizedtext{TOTAL AMOUNT DUE:} & 
-            {\Large\emphasizedtext{\formatcurrency{\totalamount}}} \\
-        \end{tabular}
-    \end{flushright}
+        \layoutlabel{Total due}\hspace{1em}%
+        {\large\bfseries\textcolor{accent}{\formatcurrency{\totalamount}}}%
+    \end{flushright}%
 }
 
 % ================================================================================
@@ -165,46 +168,39 @@
 
 \begin{document}
 
-% Header
-\noindent
-\begin{minipage}[t]{0.47\textwidth}
-    \contactblock{from}{\companyname}\\[\smallgap]
+\color{ink}
+
+% Header: company on the left, invoice metadata on the right
+\begin{minipage}[t]{0.55\textwidth}
+    {\large\bfseries\companyname}\\[0.35cm]
     \contactinfo{\companystreet}\\
-    \contactinfo{\companycity}\\[0.3cm]
+    \contactinfo{\companycity}\\[0.25cm]
     \contactinfo{\companyphone}\\
-    \contactinfo{\texttt{\companyemail}}
+    \contactinfo{\monovalue{\companyemail}}
 \end{minipage}%
 \hfill%
-\begin{minipage}[t]{0.47\textwidth}
+\begin{minipage}[t]{0.4\textwidth}
     \begin{flushright}
-        \contactblock{to}{\clientname}\\[\smallgap]
-        \contactinfo{\clientaddress}
+        {\Large\bfseries Invoice}\\[0.5cm]
+        \begin{tabular}{@{}r@{\hspace{0.75em}}l@{}}
+            \layoutlabel{No.}  & \monovalue{\small\invoicenumber} \\[0.05cm]
+            \layoutlabel{Date} & {\small\invoicedate} \\[0.05cm]
+            \layoutlabel{Due}  & {\small\bfseries\invoicedeadline} \\
+        \end{tabular}
     \end{flushright}
 \end{minipage}
 
 \sectionskip
 
-% Invoice title
-\begin{center}
-    {\Huge\emphasizedtext{INVOICE}}
-\end{center}
-
-\blockskip
-
-% Invoice metadata (inline, one row, spaced L-C-R)
-\noindent
-\begin{center}
-    \begin{tabular*}{\textwidth}{@{\extracolsep{\fill}}ccc@{}}
-        \layoutlabel{Invoice Number} & \layoutlabel{Invoice Date} & \layoutlabel{Payment Due} \\
-        \textbf{\invoicenumber} & \textbf{\invoicedate} & \textbf{\invoicedeadline} \\
-    \end{tabular*}
-\end{center}
+% Client
+\layoutlabel{Billed to}\\[0.25cm]
+{\large\bfseries\clientname\par}
+\vspace{0.05cm}
+\contactinfo{\clientaddress}
 
 \sectionskip
 
-% Services section
-\sectionheader{Services Provided}
-
+% Services
 \startservicestable
     \newservice{Technical consultation and code review}{8}{75.00}
     \newservice{Database optimization and performance tuning}{12}{85.00}
@@ -220,31 +216,30 @@
 % Total amount
 \displaytotal
 
-\blockskip
+\itemskip
 
 % Payment information
-\sectionheader{Payment Information}
-
-\begin{tabular}{@{}p{3cm}l@{}}
-    \layoutlabel{IBAN} & \texttt{\textbf{\companyiban}} \\[\smallgap]
-    \layoutlabel{BIC/SWIFT} & \texttt{\textbf{\companybic}} \\[\smallgap]
+\sectionheader{Payment}
+\begin{tabular}{@{}p{2.6cm}l@{}}
+    \layoutlabel{IBAN}        & \monovalue{\companyiban} \\[\smallgap]
+    \layoutlabel{BIC / SWIFT} & \monovalue{\companybic}  \\
 \end{tabular}
 
 \itemskip
 
 % Notes
 \sectionheader{Notes}
+\contactinfo{Thank you! Please include the invoice number
+    \textcolor{ink}{\bfseries\invoicenumber} in your payment reference.}
 
-\textcolor{darkgray}{%
-\small Thank you! Please include the invoice number \textbf{\invoicenumber} in your payment reference.}
-
-\sectionskip
-
-% Footer
+% Footer, pinned to the bottom of the page
+\vfill
+\hairlinerule
 \begin{center}
-    {\small\textcolor{lightgray}{%
-        \textbf{\companyname} \\ \textbf{\companycif} \\ \companystreet \\ \companycity \\ \companyphone \\ \texttt{\companyemail}
-    }}
+    \textcolor{muted}{\ttfamily\footnotesize
+        \companyname\ \textperiodcentered\ \companycif\ \textperiodcentered\
+        \companystreet, \companycity\ \textperiodcentered\
+        \companyphone\ \textperiodcentered\ \companyemail}
 \end{center}
 
 \end{document}
